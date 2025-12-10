@@ -3,7 +3,7 @@
 input="$1"
 pairs="$2"
 
-declare -a boxes
+boxes=()
 while read -r line; do
     boxes+=("$line")
 done < "$input"
@@ -27,7 +27,7 @@ done
 
 sorted_distances=($(printf "%s\n" "${distances[@]}" | sort -n -t'|' -k1))
 
-declare -a parent
+parent=()
 for ((i=0; i < ${#boxes[@]}; i++)); do
     parent[$i]=$i
 done
@@ -56,11 +56,19 @@ union() {
 }
 
 connections=0
-for ((i=0; i < pairs && i < ${#sorted_distances[@]}; i++)); do
+total=${#boxes[@]}
+for ((i=0; i < ${#sorted_distances[@]}; i++)); do
     IFS='|' read -r d b1 b2 <<< "${sorted_distances[$i]}"
     
     if union "$b1" "$b2"; then
         ((connections++))
+        ((total--))
+    fi
+    if [[ $total -eq 1 ]]; then
+            IFS=, read -r x1 y1 z1 <<< "${boxes[$b1]}"
+            IFS=, read -r x2 y2 z2 <<< "${boxes[$b2]}"
+            part_two=$((x1 * x2))
+            break
     fi
 done
 
@@ -72,7 +80,7 @@ for ((i=0; i < ${#boxes[@]}; i++)); do
     ((circuit[$root]++))
 done
 
-declare -a sizes
+sizes=()
 for root in "${!circuit[@]}"; do
     size=${circuit[$root]}
     sizes+=($size)
@@ -89,3 +97,4 @@ done
 
 echo ""
 echo "[part one] The product of the three largest circuit sizes: $result"
+echo "[part two] The value of X coordinates is: $part_two."
